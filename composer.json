@@ -1,0 +1,21 @@
+{
+  "name": "illiababak/role-based-dashboard-api",
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Core\\": "core/"
+    }
+  },
+  "authors": [
+    {
+      "name": "dz1to4ka",
+      "email": "117407093+illiaBabak@users.noreply.github.com"
+    }
+  ],
+  "scripts": {
+    "serve": [
+      "Composer\\Config::disableProcessTimeout",
+      "@php -S localhost:8000 -t public"
+    ]
+  }
+}
