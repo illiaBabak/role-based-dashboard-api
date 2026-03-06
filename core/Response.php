@@ -34,6 +34,12 @@ final class Response
 
     public static function getBody()
     {
-        return json_decode(file_get_contents('php://input', true) ?? null);
+        $rawBody = file_get_contents('php://input');
+
+        if (!$rawBody) {
+            return null;
+        }
+
+        return json_decode($rawBody);
     }
 }
