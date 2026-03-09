@@ -17,6 +17,11 @@ final class AuthController
         $this->authService = new AuthService();
     }
 
+    public function getUser()
+    {
+        return $this->authService->me();
+    }
+
     public function createUser()
     {
         $body = Response::getBody();

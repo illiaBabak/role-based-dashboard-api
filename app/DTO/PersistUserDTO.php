@@ -6,7 +6,6 @@ final class PersistUserDTO
 {
     private string $login;
     private string $name;
-
     private string $role;
 
     private function __construct(string $login, string $name, string $role)

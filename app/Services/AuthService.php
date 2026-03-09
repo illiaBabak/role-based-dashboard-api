@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\DTO\InputUserDTO;
 use App\DTO\PersistUserDTO;
+use App\Models\SessionsModel;
 use Core\Response;
 use App\Models\UsersModel;
 
@@ -17,10 +18,12 @@ function generateRandomString(int $length = 10)
 final class AuthService
 {
     private UsersModel $usersModel;
+    private SessionsModel $sessions_model;
 
     public function __construct()
     {
         $this->usersModel = new UsersModel();
+        $this->sessions_model = new SessionsModel();
     }
 
     public function generateToken(string $role)
@@ -33,6 +36,66 @@ final class AuthService
         } else {
             return $user_part . generateRandomString(10);
         }
+    }
+
+    public function me()
+    {
+        $token = $_COOKIE["token"] ?? null;
+
+        if (!$token) {
+            return Response::error("Unauthorized", 401);
+        }
+
+        $session = $this->sessions_model->getSessionByToken($token);
+
+        if (!$session) {
+            return Response::error("Unauthorized", 401);
+        }
+
+        if (strtotime($session['expires_at']) < time()) {
+            return Response::error('Session expired', 401);
+        }
+
+        $user = $this->usersModel->getUserById($session['user_id']);
+
+        if (!$user) {
+            return Response::error('Unauthorized', 401);
+        }
+
+        $safeUser = [
+            'id' => $user['id'],
+            'login' => $user['login'],
+            'name' => $user['name'],
+            'role' => $user['role'],
+        ];
+
+        return Response::json([
+            'user' => $safeUser,
+        ]);
+    }
+
+    public function logout()
+    {
+        $token = $_COOKIE['token'] ?? null;
+
+        if (!$token) {
+            return Response::error("Unauthorized", 401);
+        }
+
+        $this->sessions_model->deleteSessionByToken($token);
+
+        setcookie('token', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'domain' => '',
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
+        return Response::json([
+            'message' => 'Logged out',
+        ]);
     }
 
     public function registerUser(InputUserDTO $user)
@@ -58,17 +121,38 @@ final class AuthService
 
         $user = PersistUserDTO::create($login, $name, $role);
 
-        $isCreated = $this->usersModel->createUser($user, $hash_password);
+        $userId = $this->usersModel->createUser($user, $hash_password);
 
-        if (!$isCreated) {
+        if (!$userId) {
             return Response::error('Failed to create user');
         }
 
         $token = $this->generateToken($role);
 
+        $expiresAt = date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 7); // 7 days
+
+        $this->sessions_model->createSession($userId, $token, $expiresAt);
+
+        setcookie(
+            'token',
+            $token,
+            [
+                'expires' => time() + 60 * 60 * 24 * 7, // 7 days
+                'path' => '/',
+                'domain' => '',
+                'secure' => false, // true in HTTPS production
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]
+        );
+
         $payload = [
-            "token" => $token,
-            "user" => $user,
+            "user" => [
+                "id" => $userId,
+                "login" => $login,
+                "name" => $name,
+                "role" => $role,
+            ],
         ];
 
         return Response::json($payload);
@@ -88,9 +172,30 @@ final class AuthService
 
         $token = $this->generateToken($user['role']);
 
+        $expiresAt = date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 7); // 7 days
+
+        $this->sessions_model->createSession($user['id'], $token, $expiresAt);
+
+        setcookie(
+            'token',
+            $token,
+            [
+                'expires' => time() + 60 * 60 * 24 * 7, // 7 days
+                'path' => '/',
+                'domain' => '',
+                'secure' => false, // true in HTTPS production
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]
+        );
+
         $payload = [
-            "token" => $token,
-            "user" => $user,
+            "user" => [
+                "id" => $user['id'],
+                "login" => $user['login'],
+                "name" => $user['name'],
+                "role" => $user['role'],
+            ],
         ];
 
         return Response::json($payload);
