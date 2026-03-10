@@ -18,12 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 use Core\Router;
 use App\Controllers\AuthController;
+use App\Controllers\UsersController;
 
 $router = new Router();
 
 $router->get('/auth/me', AuthController::class . "@getUser");
 $router->post('/auth/register', AuthController::class . "@createUser");
 $router->post('/auth/login', AuthController::class . "@loginUser");
+$router->post('/auth/logout', AuthController::class . "@logout");
+
+$router->get('/users', UsersController::class . "@getUsers");
+$router->patch('/users/{id}', UsersController::class . "@updateUser");
+$router->delete('/users/{id}', UsersController::class . "@deleteUser");
 
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['_method'])) {

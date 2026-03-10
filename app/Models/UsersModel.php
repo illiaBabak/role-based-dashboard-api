@@ -43,6 +43,16 @@ final class UsersModel
         return $user ?? null;
     }
 
+    public function getUsers()
+    {
+        $stmt = $this->connect->prepare("SELECT id, login, name, role FROM users");
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
     public function createUser(PersistUserDTO $user, string $hash_password): int
     {
         $login = $user->login();
@@ -54,5 +64,23 @@ final class UsersModel
         $stmt->execute();
 
         return $stmt->insert_id;
+    }
+
+    public function updateUser(int $id, string $name, string $role)
+    {
+        $stmt = $this->connect->prepare("UPDATE users SET name = ?, role = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $name, $role, $id);
+        $stmt->execute();
+
+        return $stmt->affected_rows > 0;
+    }
+
+    public function deleteUser(int $id)
+    {
+        $stmt = $this->connect->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        return $stmt->affected_rows > 0;
     }
 }

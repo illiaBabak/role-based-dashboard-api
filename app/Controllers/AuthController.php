@@ -53,4 +53,9 @@ final class AuthController
 
         return $this->authService->loginUser($login, $password);
     }
+
+    public function logout()
+    {
+        return $this->authService->logout();
+    }
 }
