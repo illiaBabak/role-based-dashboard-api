@@ -18,17 +18,6 @@ final class UsersService
         $this->sessionsModel = new SessionsModel();
     }
 
-    public function isUserRole(int $user_id)
-    {
-        $user = $this->usersModel->getUserById($user_id);
-
-        if (!$user) {
-            return false;
-        }
-
-        return $user['role'] === 'user';
-    }
-
     public function getUsers()
     {
         $token = $_COOKIE["token"] ?? null;
@@ -49,10 +38,7 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
-        file_put_contents('php://stderr', 'getUsers current user: ' . json_encode($user) . "\n");
-
         if ($user['role'] === 'user') {
-
             return Response::json([
                 'users' => [$user],
             ]);
@@ -77,26 +63,25 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
+        $user = $this->usersModel->getUserById($id);
+
+        if (!$user) {
+            return Response::error("Unauthorized", 401);
+        }
+
         // Check if user with role "user" is trying to update another user
-        if ($session['user_id'] !== $id && $this->isUserRole($session['user_id'])) {
+        if ($session['user_id'] !== $id && $user['role'] === 'user') {
             return Response::error("You are not allowed to update this user", 403);
         }
 
-        $existingUser = $this->usersModel->getUserById($id);
-
-        if (!$existingUser) {
-            return Response::error("User not found", 404);
-        }
-
-        $nameToUpdate = $name ?? $existingUser['name'];
-        $roleToUpdate = $role ?? $existingUser['role'];
+        $nameToUpdate = $name ?? $user['name'];
+        $roleToUpdate = $role ?? $user['role'];
 
         $result = $this->usersModel->updateUser($id, $nameToUpdate, $roleToUpdate);
 
         if (!$result) {
             return Response::error("Failed to update user", 500);
         }
-
 
         return Response::json([
             'message' => 'User updated successfully',
@@ -117,8 +102,14 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
+        $user = $this->usersModel->getUserById($id);
+
+        if (!$user) {
+            return Response::error("Unauthorized", 401);
+        }
+
         // Check if user with role "user" is trying to delete another user
-        if ($session['user_id'] !== $id && $this->isUserRole($session['user_id'])) {
+        if ($session['user_id'] !== $id && $user['role'] === 'user') {
             return Response::error("You are not allowed to delete this user", 403);
         }
 

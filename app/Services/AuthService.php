@@ -62,15 +62,8 @@ final class AuthService
             return Response::error('Unauthorized', 401);
         }
 
-        $safeUser = [
-            'id' => $user['id'],
-            'login' => $user['login'],
-            'name' => $user['name'],
-            'role' => $user['role'],
-        ];
-
         return Response::json([
-            'user' => $safeUser,
+            'user' => $user,
         ]);
     }
 
