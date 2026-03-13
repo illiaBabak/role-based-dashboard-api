@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+
 // CORS
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -19,6 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 use Core\Router;
 use App\Controllers\AuthController;
 use App\Controllers\UsersController;
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . "/../");
+$dotenv->safeLoad();
 
 $router = new Router();
 

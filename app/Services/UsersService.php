@@ -18,11 +18,15 @@ final class UsersService
         $this->sessionsModel = new SessionsModel();
     }
 
-    public function isUserRole(string $token)
+    public function isUserRole(int $user_id)
     {
-        if (str_contains($token, "User-x-")) {
-            return true;
+        $user = $this->usersModel->getUserById($user_id);
+
+        if (!$user) {
+            return false;
         }
+
+        return $user['role'] === 'user';
     }
 
     public function getUsers()
@@ -39,10 +43,15 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
-        if ($this->isUserRole($token)) {
-            $user_id = $session['user_id'];
+        $user = $this->usersModel->getUserById($session['user_id']);
 
-            $user = $this->usersModel->getUserById($user_id);
+        if (!$user) {
+            return Response::error("Unauthorized", 401);
+        }
+
+        file_put_contents('php://stderr', 'getUsers current user: ' . json_encode($user) . "\n");
+
+        if ($user['role'] === 'user') {
 
             return Response::json([
                 'users' => [$user],
@@ -54,7 +63,7 @@ final class UsersService
         ]);
     }
 
-    public function updateUser(int $id, string $name, string $role)
+    public function updateUser(int $id, ?string $name, ?string $role)
     {
         $token = $_COOKIE["token"] ?? null;
 
@@ -69,15 +78,25 @@ final class UsersService
         }
 
         // Check if user with role "user" is trying to update another user
-        if ($session['user_id'] !== $id && $this->isUserRole($token)) {
+        if ($session['user_id'] !== $id && $this->isUserRole($session['user_id'])) {
             return Response::error("You are not allowed to update this user", 403);
         }
 
-        $result = $this->usersModel->updateUser($id, $name, $role);
+        $existingUser = $this->usersModel->getUserById($id);
+
+        if (!$existingUser) {
+            return Response::error("User not found", 404);
+        }
+
+        $nameToUpdate = $name ?? $existingUser['name'];
+        $roleToUpdate = $role ?? $existingUser['role'];
+
+        $result = $this->usersModel->updateUser($id, $nameToUpdate, $roleToUpdate);
 
         if (!$result) {
             return Response::error("Failed to update user", 500);
         }
+
 
         return Response::json([
             'message' => 'User updated successfully',
@@ -99,9 +118,11 @@ final class UsersService
         }
 
         // Check if user with role "user" is trying to delete another user
-        if ($session['user_id'] !== $id && $this->isUserRole($token)) {
+        if ($session['user_id'] !== $id && $this->isUserRole($session['user_id'])) {
             return Response::error("You are not allowed to delete this user", 403);
         }
+
+        $this->sessionsModel->deleteSessionByUserId($id);
 
         $result = $this->usersModel->deleteUser($id);
 

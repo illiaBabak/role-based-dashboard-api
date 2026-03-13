@@ -12,12 +12,12 @@ final class MySQLConnect
 
     public function __construct()
     {
-        $db = "rbd";
-        $host = "127.0.0.1";
-        $user = "root";
-        $password = "";
-
-        $this->connect = new mysqli($host, $user, $password, $db);
+        $this->connect = new mysqli(
+            $_ENV['DB_HOST'],
+            $_ENV['DB_USER'],
+            $_ENV['DB_PASSWORD'],
+            $_ENV['DB_NAME'],
+        );
 
         if ($this->connect->connect_error) {
             throw new \Exception("Connection to MySQL DB failed");

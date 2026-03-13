@@ -15,7 +15,10 @@
   "scripts": {
     "serve": [
       "Composer\\Config::disableProcessTimeout",
-      "@php -S localhost:8000 -t public"
+      "@php -S 0.0.0.0:8000 -t public"
     ]
+  },
+  "require": {
+    "vlucas/phpdotenv": "^5.6"
   }
 }

@@ -82,7 +82,13 @@ final class AuthService
             return Response::error("Unauthorized", 401);
         }
 
-        $this->sessions_model->deleteSessionByToken($token);
+        $session = $this->sessions_model->getSessionByToken($token);
+
+        if (!$session) {
+            return Response::error("Unauthorized", 401);
+        }
+
+        $this->sessions_model->deleteSessionByUserId($session['user_id']);
 
         setcookie('token', '', [
             'expires' => time() - 3600,

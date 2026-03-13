@@ -33,10 +33,10 @@ final class UsersController
             return Response::error('Body is required');
         }
 
-        $name = $body->name;
-        $role = $body->role;
+        $name = $body->name ?? null;
+        $role = $body->role ?? null;
 
-        if (!$name && !$role) {
+        if (!$name && $role === null) {
             return Response::error('Name or role are required');
         }
 

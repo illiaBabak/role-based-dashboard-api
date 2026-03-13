@@ -38,10 +38,10 @@ final class SessionsModel
         return $session ?? null;
     }
 
-    public function deleteSessionByToken(string $token)
+    public function deleteSessionByUserId(int $user_id)
     {
-        $stmt = $this->connect->prepare("DELETE FROM user_sessions WHERE token = ?");
-        $stmt->bind_param("s", $token);
+        $stmt = $this->connect->prepare("DELETE FROM user_sessions WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
 
         return $stmt->execute();
     }
