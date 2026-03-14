@@ -20,10 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 use Core\Router;
 use App\Controllers\AuthController;
 use App\Controllers\UsersController;
-use Dotenv\Dotenv;
-
-$dotenv = Dotenv::createImmutable(__DIR__ . "/../");
-$dotenv->safeLoad();
 
 $router = new Router();
 
