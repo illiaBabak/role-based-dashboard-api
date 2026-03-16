@@ -63,19 +63,21 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
-        $user = $this->usersModel->getUserById($id);
+        $currentUser = $this->usersModel->getUserById($session['user_id']);
 
-        if (!$user) {
+        $userToUpdate = $this->usersModel->getUserById($id);
+
+        if (!$currentUser) {
             return Response::error("Unauthorized", 401);
         }
 
         // Check if user with role "user" is trying to update another user
-        if ($session['user_id'] !== $id && $user['role'] === 'user') {
+        if ($currentUser['id'] !== $id && $currentUser['role'] === 'user') {
             return Response::error("You are not allowed to update this user", 403);
         }
 
-        $nameToUpdate = $name ?? $user['name'];
-        $roleToUpdate = $role ?? $user['role'];
+        $nameToUpdate = $name ?? $userToUpdate['name'];
+        $roleToUpdate = $role ?? $userToUpdate['role'];
 
         $result = $this->usersModel->updateUser($id, $nameToUpdate, $roleToUpdate);
 
@@ -102,14 +104,14 @@ final class UsersService
             return Response::error("Unauthorized", 401);
         }
 
-        $user = $this->usersModel->getUserById($id);
+        $currentUser = $this->usersModel->getUserById($session['user_id']);
 
-        if (!$user) {
+        if (!$currentUser) {
             return Response::error("Unauthorized", 401);
         }
 
         // Check if user with role "user" is trying to delete another user
-        if ($session['user_id'] !== $id && $user['role'] === 'user') {
+        if ($currentUser['id'] !== $id && $currentUser['role'] === 'user') {
             return Response::error("You are not allowed to delete this user", 403);
         }
 
