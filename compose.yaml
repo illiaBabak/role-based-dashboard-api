@@ -10,6 +10,7 @@ services:
       - .env
     volumes:
       - .:/src
+      - vendor-data:/src/vendor
   db:
     image: mysql:8
     restart: always
@@ -36,3 +37,4 @@ services:
 
 volumes:
   mysql-data:
+  vendor-data:
